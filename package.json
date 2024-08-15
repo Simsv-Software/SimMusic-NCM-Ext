@@ -1,6 +1,6 @@
 {
   "name": "simmusic-ncm-ext",
-  "version": "0.0.2+for.0.4-alpha",
+  "version": "0.0.2-alpha+for.0.4",
   "type": "module",
   "scripts": {
     "build": "vite build"
