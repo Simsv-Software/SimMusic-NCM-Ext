@@ -39,10 +39,12 @@ function purgeExceeded(): void {
     }
 
     cacheIndex.sort((a, b) => a.addTime == b.addTime ? 0 : a.addTime > b.addTime ? 1 : -1);
-    cacheIndex.slice(0, removeNum).map(it => it.id).forEach(id => {
+    for (let i = 0; i < removeNum; i++) {
+        const id = cacheIndex.shift()?.id;
+
         fs.rmSync(join(cacheDir, id + '.cache'));
         console.log('Purged cache for NCM song ' + id);
-    });
+    }
 }
 
 export function initCache(): void {
