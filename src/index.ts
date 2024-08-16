@@ -1,4 +1,5 @@
 import { getCache, initCache, makeCache } from './cache';
+import { formatLyric } from './lyricpp';
 
 declare const defaultConfig: any;
 declare const config: { getItem(key: string): string };
@@ -29,7 +30,8 @@ Object.assign(defaultConfig, {
     'ext.ncm.searchLimit': 30,
     'ext.ncm.filterInvalid': true,
     'ext.ncm.cacheEnabled': true,
-    'ext.ncm.maxCacheCount': 50
+    'ext.ncm.maxCacheCount': 50,
+    'ext.ncm.formatLrc': true
 });
 
 SettingsPage.data.push(
@@ -51,6 +53,7 @@ SettingsPage.data.push(
             alert('网易云歌曲缓存已全部清除，点击确定以重载应用。', () => ipcRenderer.invoke("restart"));
         }
     },
+    { type: 'boolean', text: '自动格式化歌词', description: '开启后将会自动在网易云歌曲歌词中的无尾随空格英文标点后添加空格，增加 UI 美观度。', configItem: 'ext.ncm.formatLrc' }
 );
 
 // 清除上次无法清除的缓存
@@ -161,6 +164,10 @@ ExtensionConfig.ncm = {
             let lyric = resp.lrc.lyric;
             if (resp.tlyric) {
                 lyric += '\n' + resp.tlyric.lyric;
+            }
+
+            if (config.getItem('ext.ncm.formatLrc')) {
+                lyric = formatLyric(lyric);
             }
 
             return (cachedLyrics[id] = lyric);

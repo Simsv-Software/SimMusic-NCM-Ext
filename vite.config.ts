@@ -22,7 +22,7 @@ export default defineConfig({
                     name: '网易云 NodeJS API 扩展',
                     url: 'file://' + resolve(__dirname, 'dist', 'index.cjs').replace(/\\/g, '/'),
                     schema: 'ncm',
-                    version: '0.0.2-alpha.2+for.0.4',
+                    version: '0.0.3-alpha.1+for.0.4',
                     isDev: !PRODUCTION
                 }, null, 4));
             }
