@@ -24,6 +24,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ci_${{ github.run_id }}
           name: "自动构建 #${{ github.run_id }}"
-          body: 这是一个自动构建，请参阅项目 README 以进行安装。
+          body: |
+            这是一个自动构建，请您参阅项目 README 以进行安装。
+            这个 Release 支持 SimMusic 0.1.0，请勿跨版本使用。
           make_latest: true
           files: dist/extension.zip

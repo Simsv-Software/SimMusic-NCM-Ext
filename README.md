@@ -17,7 +17,7 @@
 *注意，您可能需要一个良好的网络环境。*
 
 ### 预先构建
-您可以前往 [最新 Releases](https://github.com/simsv-software/SimMusic-NCM-Ext/releases/latest) 页面，下载 `extension.zip`。
+您可以前往 [最新 Release](https://github.com/simsv-software/SimMusic-NCM-Ext/releases/latest) 页面，下载 `extension.zip`。
 
 然后，将它拖入 SimMusic 扩展页面，即可完成安装。
 
