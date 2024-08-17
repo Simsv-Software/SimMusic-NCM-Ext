@@ -1,8 +1,10 @@
 # SimMusic NCM 扩展
-本项目是 [SimMusic](https://github.com/Simsv-Software/SimMusic2024) 的扩展，支持接入`网易云 NodeJS API`。
+本项目是 [SimMusic](https://github.com/Simsv-Software/SimMusic2024) 的扩展，支持接入 `网易云 NodeJS API`。
 
 ## 提示
-目前本项目适配 SimMusic 0.4 版本，请勿跨版本使用。
+目前本项目适配 SimMusic 0.1.0 版本，请勿跨版本使用。
+
+<small><i>(2024/08/17)</i> 注: 以往提交记录中的 `0.4` 版本为误写，实际为 `0.0.4` 版本。</small>
 
 ## 声明
 本项目**不**提供 API 服务，您需要一个预先搭建好的 API 才能使用。
@@ -12,15 +14,15 @@
 本项目与网易公司（网易云音乐版权所有者）**无关**。
 
 ## 使用
-### 预先构建
-点击添加扩展，输入 `https://simsv.com/sim-music/extensions/ncm/manifest.json`，点击确定即可。
+*注意，您可能需要一个良好的网络环境。*
 
-*注意，为了兼容，扩展将不会自动更新，若您需要更新至最新版本，请删除扩展后重新添加。*
+### 预先构建
+您可以前往 [最新 Releases](https://github.com/simsv-software/SimMusic-NCM-Ext/releases/latest) 页面，下载 `extension.zip`。
+
+然后，将它拖入 SimMusic 扩展页面，即可完成安装。
 
 ### 手动构建
 您还可以手动进行构建来使用最新版本，具体步骤如下。
-
-*注意，您可能需要一个良好的网络环境。*
 
 首先，运行以下命令：
 
@@ -31,9 +33,7 @@ npm i
 npm run build
 ```
 
-然后，打开 SimMusic，点击左栏 `扩展`，点击 `添加扩展`。
-
-输入 `file:// + manifest.json 的绝对路径`（e.g. `file://D:/SimMusic-NCM-Ext/manifest.json`），点击 `确定`，添加扩展。
+然后，打开项目中的 `dist` 文件夹，将 `extension.zip` 拖入 SimMusic 扩展页面，即可完成安装。
 
 ## 问题反馈
 若您发现了问题或有好的意见，请开启一个 `issue`。

@@ -1,0 +1,29 @@
+name: Build and Publish
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        run: npm i
+
+      - name: Run Build
+        run: npm run build
+
+      - name: Create & Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ci_${{ github.run_id }}
+          name: "自动构建 #${{ github.run_id }}"
+          body: 这是一个自动构建，请参阅项目 README 以进行安装。
+          make_latest: true
+          files: dist/extension.zip

@@ -5,6 +5,7 @@ declare const defaultConfig: any;
 declare const config: { getItem(key: string): string };
 declare const SettingsPage: { data: Array<any> };
 declare const ExtensionConfig: any;
+declare const DownloadController: { getMenuItems(): any };
 declare const ipcRenderer: { invoke(msg: any): void };
 declare function showErrorOverlay(err: Error): void;
 declare function alert(msg: string, then?: Function): void;
@@ -102,8 +103,6 @@ const cachedPlayUrl: Record<string, PlayUrlCache> = {};
 const cachedLyrics: Record<string, string> = {};
 
 ExtensionConfig.ncm = {
-    uiName: '网易云',
-
     async readMetadata(path: string) {
         const id = path.substring(/* ncm: */ 4);
         if (cachedMetadata[id]) {
@@ -196,7 +195,8 @@ ExtensionConfig.ncm = {
 
             return {
                 files: ids.map((it: string) => 'ncm:' + it),
-                hasMore: resp.result.hasMore
+                hasMore: resp.result.hasMore,
+                menu: [DownloadController.getMenuItems()]
             };
         } catch (err) {
             console.error(err);

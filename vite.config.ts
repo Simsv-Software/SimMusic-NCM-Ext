@@ -1,9 +1,8 @@
-import { writeFileSync } from "fs";
-import { resolve } from "path";
+import { readFileSync, writeFileSync } from "fs";
 import { defineConfig } from "vite";
+import { strToU8, zipSync } from "fflate";
 
-const VERSION = '0.0.3-alpha.1+for.0.4';
-const PRODUCTION = true;
+const VERSION = JSON.parse(readFileSync('package.json').toString()).version;
 
 export default defineConfig({
     build: {
@@ -18,16 +17,6 @@ export default defineConfig({
         {
             name: 'Post Build Operations',
 
-            buildEnd() {
-                writeFileSync('manifest.json', JSON.stringify({
-                    name: '网易云 NodeJS API 扩展',
-                    url: 'file://' + resolve(__dirname, 'dist/index.cjs').replace(/\\/g, '/'),
-                    schema: 'ncm',
-                    version: VERSION,
-                    isDev: !PRODUCTION
-                }, null, 4));
-            },
-
             async writeBundle(_, bundle) {
                 /* Minify again! */
                 const indexBundle = bundle['index.cjs'] as any;
@@ -36,18 +25,21 @@ export default defineConfig({
 
                 writeFileSync('dist/index.cjs', minified);
 
-                /* 自动推送 API */
-                if (process.env.GITHUB_CI_BUILD == 'YES') {
-                    await fetch(process.env.SECRET_UPLOAD_URL as string, {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: 'key=' + encodeURI(process.env.SECRET_KEY as string) + '&version=' + encodeURIComponent(VERSION) + '&code=' + encodeURIComponent(minified)
-                    });
+                /* 打包 */
+                const manifest = JSON.stringify({
+                    extName: '网易云 NodeJS API 支持扩展',
+                    uiName: '网易云',
+                    entries: ['index.js'],
+                    packageId: 'ncm',
+                    version: VERSION
+                });
 
-                    console.log('* Successfully uploaded artifact to the api.');
-                }
+                const data = zipSync({
+                    'manifest.json': strToU8(manifest),
+                    'index.js': strToU8(minified)
+                });
+
+                writeFileSync('dist/extension.zip', data);
             }
         }
     ]
