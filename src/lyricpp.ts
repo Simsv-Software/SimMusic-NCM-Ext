@@ -10,5 +10,5 @@ export function formatLyric(input: string): string {
         input = input.replace(regexpCache[it], it + ' ');
     });
 
-    return input.replace(/(?<!\d)\.(?!\d\s)/g, '. ');
+    return input.replace(/(?<!\d)\.(?!\d\s\.)/g, '. ');
 }

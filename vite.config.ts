@@ -17,7 +17,7 @@ export default defineConfig({
         {
             name: 'Post Build Operations',
 
-            async writeBundle(_, bundle) {
+            writeBundle(_, bundle) {
                 /* Minify again! */
                 const indexBundle = bundle['index.cjs'] as any;
                 const minified = (indexBundle.code as string)
