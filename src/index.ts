@@ -242,51 +242,54 @@ ExtensionConfig.ncm = {
     musicList: {
         async _import(callback: Function, id: string, isUpdate: boolean = false) {
             let list: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
-                if (!isUpdate) {
-                    for (let entry of list) {
-                        if (entry.id == id) {
-                            return alert('此歌单（' + entry.name + '）已被添加，请尝试删除后重试。')
-                        }
+            if (!isUpdate) {
+                for (let entry of list) {
+                    if (entry.id == id) {
+                        return alert('此歌单（' + entry.name + '）已被添加，请尝试删除后重试。')
                     }
                 }
+            }
 
-                // 解析歌单
-                try {
-                    const resp = await request('/playlist/detail', { id });
-                    const name = resp.playlist.name;
-                    let ids = resp.playlist.tracks.map((it: any) => it.id);
-                    let filtered = 0;
+            // 解析歌单
+            try {
+                const resp = await request('/playlist/detail', { id });
+                const name = resp.playlist.name;
+                let ids = resp.playlist.tracks.map((it: any) => it.id);
+                let filtered = 0;
 
-                    if (config.getItem('ext.ncm.filterInvalid')) {
-                        const len = ids.length;
+                if (config.getItem('ext.ncm.filterInvalid')) {
+                    const len = ids.length;
 
-                        resp.privileges.forEach((it: any) => {
-                            playableMap[it.id] = it.plLevel != 'none';
-                        });
+                    resp.privileges.forEach((it: any) => {
+                        playableMap[it.id] = it.plLevel != 'none';
+                    });
 
-                        ids = ids.filter((it: string) => playableMap[it]);
-                        filtered = len - ids.length;
-                    }
-
-                    const metadata = await fetchMetadata(...ids);
-
-                    if (isUpdate) {
-                        list = list.filter(it => it.id != id);
-                    }
-
-                    const newEntry: MusicListEntry = { id, name, songs: metadata };
-                    list.push(newEntry);
-
-                    config.setItem('ext.ncm.musicList', list);
-
-                    if (isUpdate) {
-                        ExtensionConfig.ncm.musicList.switchList(id);
-                    }
-
-                    alert('成功导入歌单 ' + name + '，共导入 ' + ids.length + ' 首歌曲' + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '') + '。', callback);
-                } catch (err) {
-                    alert('导入歌单失败，请稍后重试：' + err);
+                    ids = ids.filter((it: string) => playableMap[it]);
+                    filtered = len - ids.length;
                 }
+
+                const metadata = await fetchMetadata(...ids);
+                if (Object.keys(metadata).length != ids.length) {
+                    throw '获取歌曲元数据时发生错误。';
+                }
+
+                if (isUpdate) {
+                    list = list.filter(it => it.id != id);
+                }
+
+                const newEntry: MusicListEntry = { id, name, songs: metadata };
+                list.push(newEntry);
+
+                config.setItem('ext.ncm.musicList', list);
+
+                if (isUpdate) {
+                    ExtensionConfig.ncm.musicList.switchList(id);
+                }
+
+                alert('成功导入歌单 ' + name + '，共导入 ' + ids.length + ' 首歌曲' + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '') + '。', callback);
+            } catch (err) {
+                alert('导入歌单失败，请稍后重试：' + err);
+            }
         },
 
         add(callback: Function) {
@@ -346,6 +349,7 @@ ExtensionConfig.ncm = {
                             label: '从列表中移除', click() {
                                 confirm(`确认移除网易云歌单 ${entry.name} 吗？`, () => {
                                     const currentList: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
+                                    console.log(currentList.filter(it => it.id != entry.id));
                                     config.setItem('ext.ncm.musicList', currentList.filter(it => it.id != entry.id));
 
                                     if (element.classList.contains('active')) {
