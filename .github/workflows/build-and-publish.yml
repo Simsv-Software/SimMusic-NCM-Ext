@@ -15,7 +15,10 @@ jobs:
       - name: Setup Environment
         run: npm i
 
-      - name: Run Build
+      - id: build
+        name: Run Build
+        env:
+          GITHUB_CI: 'YES'
         run: npm run build
 
       - name: Create & Upload Release
@@ -26,6 +29,6 @@ jobs:
           name: "自动构建 #${{ github.run_id }}"
           body: |
             这是一个自动构建，请您参阅项目 README 以进行安装。
-            这个 Release 支持 SimMusic 0.1.0，请勿跨版本使用。
+            当前版本 ${{ steps.build.outputs.EXT_VERSION }} 支持 SimMusic ${{ steps.build.outputs.SIMMUSIC_VERSION }} ，请勿跨版本使用。
           make_latest: true
           files: dist/extension.zip

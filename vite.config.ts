@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { strToU8, zipSync } from "fflate";
 
 const VERSION = JSON.parse(readFileSync('package.json').toString()).version;
+const SIMMUSIC_VERSION = '0.1.0';
 
 export default defineConfig({
     build: {
@@ -17,13 +18,19 @@ export default defineConfig({
         {
             name: 'Post Build Operations',
 
+            buildEnd() {
+                if (process.env.GITHUB_CI == 'YES') {
+                    writeFileSync(process.env.GITHUB_OUTPUT!!,
+                        'EXT_VERSION=' + VERSION + '\nSIMMUSIC_VERSION=' + SIMMUSIC_VERSION + '\n')
+                }
+            },
+
             writeBundle(_, bundle) {
                 /* Minify again! */
                 const indexBundle = bundle['index.cjs'] as any;
                 const minified = (indexBundle.code as string)
-                    .split('\n').map(it => it.trim()).join('');
-
-                writeFileSync('dist/index.cjs', minified);
+                    .replace(/\/\*[\s\S]*?\*\//g, '')
+                    .split('\n').filter(it => it != '').map(it => it.trim()).join('\n');
 
                 /* 打包 */
                 const manifest = JSON.stringify({
