@@ -45,6 +45,7 @@ Object.assign(defaultConfig, {
     'ext.ncm.cacheEnabled': true,
     'ext.ncm.maxCacheCount': 50,
     'ext.ncm.formatLrc': true,
+    'ext.ncm.maxParallelCount': 8,
 
     // Internal Data
     'ext.ncm.musicList': []
@@ -69,7 +70,8 @@ SettingsPage.data.push(
             alert('网易云歌曲缓存已全部清除，点击确定以重载应用。', () => ipcRenderer.invoke("restart"));
         }
     },
-    { type: 'boolean', text: '自动格式化歌词', description: '开启后将会自动在网易云歌曲歌词中的无尾随空格英文标点后添加空格，增加 UI 美观度。', configItem: 'ext.ncm.formatLrc' }
+    { type: 'boolean', text: '自动格式化歌词', description: '开启后将会自动在网易云歌曲歌词中的无尾随空格英文标点后添加空格，增加 UI 美观度。', configItem: 'ext.ncm.formatLrc' },
+    { type: 'input', inputType: 'number', text: '歌单信息最大并行请求数量', description: '必填，默认为 8，推荐不超过 16。', configItem: 'ext.ncm.maxParallelCount' }
 );
 
 // 清除上次无法清除的缓存
@@ -106,7 +108,7 @@ async function fetchMetadata(...ids: string[]): Promise<Record<string, Metadata>
     const result = {};
 
     const split = splitArray(ids, 100);
-    const pool = new AsyncPool(split.length);
+    const pool = new AsyncPool(Math.min(split.length, parseInt(config.getItem('ext.ncm.maxParallelCount'))));
     for (let idsArr of split) {
         pool.submit(async () => {
             const resp = await request('/song/detail', { ids: idsArr.join(',') });
