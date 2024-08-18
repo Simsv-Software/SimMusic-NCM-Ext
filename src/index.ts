@@ -371,15 +371,13 @@ ExtensionConfig.ncm = {
 
             renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), 'ncm-list-' + id, false, false, '该歌单为空', [DownloadController.getMenuItems()], { name: entry.name });
 
-            Object.values<HTMLDivElement>(elements).forEach(it => {
-                if (it == elements[id]) {
-                    return it.classList.add('active');
-                }
-
+            document.querySelectorAll(".left .leftBar div").forEach(it => {
                 if (it.classList.contains('active')) {
                     it.classList.remove('active');
                 }
-            });
+            })
+
+            elements[id].classList.add('active');
         }
     }
 };
