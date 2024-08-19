@@ -22,13 +22,13 @@ jobs:
         run: npm run build
 
       - name: Create & Upload Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ci_${{ github.run_id }}
           name: "自动构建 #${{ github.run_id }}"
           body: |
             这是一个自动构建，请您参阅项目 README 以进行安装。
-            当前版本 ${{ steps.build.outputs.EXT_VERSION }} 支持 SimMusic ${{ steps.build.outputs.SIMMUSIC_VERSION }} ，请勿跨版本使用。
+            当前版本 ${{ steps.build.outputs.EXT_VERSION }} 支持 SimMusic ${{ steps.build.outputs.SIMMUSIC_VERSION }}，请勿跨版本使用。
           make_latest: true
           files: dist/extension.zip
