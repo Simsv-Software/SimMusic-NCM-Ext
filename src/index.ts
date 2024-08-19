@@ -351,7 +351,6 @@ ExtensionConfig.ncm = {
                             label: '从列表中移除', click() {
                                 confirm(`确认移除网易云歌单 ${entry.name} 吗？`, () => {
                                     const currentList: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
-                                    console.log(currentList.filter(it => it.id != entry.id));
                                     config.setItem('ext.ncm.musicList', currentList.filter(it => it.id != entry.id));
 
                                     if (element.classList.contains('active')) {
