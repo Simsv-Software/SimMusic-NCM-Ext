@@ -1,4 +1,3 @@
-import { describe } from 'node:test';
 import { AsyncPool } from './async_pool';
 import { getCache, initCache, makeCache } from './cache';
 import { formatLyric } from './lyricpp';
