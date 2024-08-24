@@ -10,7 +10,7 @@ declare const DownloadController: { getMenuItems(): any };
 declare const ipcRenderer: { invoke(msg: any): void };
 declare function showErrorOverlay(err: Error): void;
 declare function switchRightPage(page: string): void;
-declare function renderMusicList(files: Array<string>, uniqueId: string, isFinalRender: boolean, dontRenderBeforeLoaded: boolean, errorText: string, menuItems: Array<any>, musicListInfo: any, force?: boolean, finishCallback?: Function): void;
+declare function renderMusicList(files: Array<string>, args: { uniqueId: string, dontRenderBeforeLoaded?: boolean, errorText?: string, menuItems: Array<any>, musicListInfo?: any, force?: boolean, finishCallback?: Function }, isFinalRender: boolean): void;
 declare function alert(msg: string, then?: Function): void;
 declare function confirm(msg: string, then?: Function): void;
 declare function prompt(placeholder: string, then: (str: string) => void): void;
@@ -150,7 +150,7 @@ ExtensionConfig.ncm = {
     },
 
     player: {
-        async getPlayUrl(path: string, count: number = 0) {
+        async getPlayUrl(path: string, isDownload: boolean, count: number = 0) {
             const id = path.substring(/* ncm: */ 4);
 
             const cached = getCache(id);
@@ -168,10 +168,10 @@ ExtensionConfig.ncm = {
 
             // Max 5 retries
             if (url == null && count < 5) {
-                return await this.getPlayUrl(path, count + 1);
+                return await this.getPlayUrl(path, isDownload, count + 1);
             }
 
-            if (config.getItem('ext.ncm.cacheEnabled')) {
+            if (!isDownload && config.getItem('ext.ncm.cacheEnabled')) {
                 makeCache(id, url);
             }
 
@@ -288,7 +288,10 @@ ExtensionConfig.ncm = {
                     ExtensionConfig.ncm.musicList.switchList(id);
                 }
 
-                alert('成功导入歌单 ' + name + '，共导入 ' + ids.length + ' 首歌曲' + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '') + '。', callback);
+                alert('成功导入歌单 ' + name + '，共导入 ' + ids.length + ' 首歌曲'
+                     + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '')
+                     + (ids.length == 1000 ? '，本次导入可能达到 API 限制' : '')
+                     + '。', callback);
             } catch (err) {
                 alert('导入歌单失败，请稍后重试：' + err);
             }
@@ -374,7 +377,12 @@ ExtensionConfig.ncm = {
             const entry: MusicListEntry = (config.getItem('ext.ncm.musicList') as Array<MusicListEntry>).find(it => it.id == id)!!;
             Object.assign(cachedMetadata, entry.songs);
 
-            renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), 'ncm-list-' + id, false, false, '该歌单为空', [DownloadController.getMenuItems()], { name: entry.name });
+            renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), { 
+                uniqueId: 'ncm-list-' + id,
+                errorText: '该歌单为空',
+                menuItems: [DownloadController.getMenuItems()],
+                musicListInfo: { name: entry.name }
+             }, false);
 
             document.querySelectorAll(".left .leftBar div").forEach(it => {
                 if (it.classList.contains('active')) {

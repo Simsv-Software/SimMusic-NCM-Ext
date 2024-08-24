@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import { strToU8, zipSync } from 'fflate';
 
 const VERSION = JSON.parse(readFileSync('package.json').toString()).version;
-const SIMMUSIC_VERSION = '0.1.0';
+const SIMMUSIC_VERSION = '0.1.2';
 
 export default defineConfig({
     build: {
