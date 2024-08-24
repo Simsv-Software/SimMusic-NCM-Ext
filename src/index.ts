@@ -1,3 +1,4 @@
+import { describe } from 'node:test';
 import { AsyncPool } from './async_pool';
 import { getCache, initCache, makeCache } from './cache';
 import { formatLyric } from './lyricpp';
@@ -42,6 +43,7 @@ Object.assign(defaultConfig, {
     'ext.ncm.apiHeaders': '',
     'ext.ncm.searchLimit': 30,
     'ext.ncm.filterInvalid': true,
+    'ext.ncm.musicQuality': 'standard',
     'ext.ncm.cacheEnabled': true,
     'ext.ncm.maxCacheCount': 50,
     'ext.ncm.formatLrc': true,
@@ -57,6 +59,14 @@ SettingsPage.data.push(
     { type: 'input', text: '要发送给 API 的 Header 信息', description: '选填，支持多个（格式：a=b&c=d，需要 URL 转义）。', configItem: 'ext.ncm.apiHeaders' },
     { type: 'input', inputType: 'number', text: '搜索时每页歌曲数量', description: '必填，默认为 30，推荐不超过 50，不能超过 100。', configItem: 'ext.ncm.searchLimit' },
     { type: 'boolean', text: '过滤无效歌曲', description: '开启后搜索结果中将过滤您无法播放的歌曲。', configItem: 'ext.ncm.filterInvalid' },
+    {
+        type: 'select', text: '歌曲质量', description: '选择在线播放、缓存、下载时的音质，若歌曲无此音质或您无相应权限，会自动降级，建议在切换后清除缓存。', options: [
+            ['low', '低 (192 kbps)'],
+            ['standard', '标准 (320 kbps)'],
+            ['sq', 'SQ (~1000 kbps)'],
+            ['hr', 'High-Res (~2000 kbps)']
+        ], configItem: 'ext.ncm.musicQuality'
+    },
     { type: 'boolean', text: '启用自动缓存', description: '开启后可提升歌单中网易云曲目的加载速度，但会占用更多内存空间。', configItem: 'ext.ncm.cacheEnabled' },
     { type: 'input', inputType: 'number', text: '最大缓存歌曲数量', description: '必填，默认为 50 首，缓存超出部分会自动删除。', configItem: 'ext.ncm.maxCacheCount' },
     {
@@ -134,6 +144,21 @@ async function fetchMetadata(...ids: string[]): Promise<Record<string, Metadata>
     return result;
 }
 
+function getBr() {
+    switch (config.getItem('ext.ncm.musicQuality')) {
+        case 'low':
+            return 192000;
+
+        case 'standard':
+            return 320000;
+
+        case 'sq':
+            return 1000000;
+    }
+
+    return 10000000;
+}
+
 let cachedMetadata: Record<string, Metadata> = {};
 const cachedPlayUrl: Record<string, PlayUrlCache> = {};
 const cachedLyrics: Record<string, string> = {};
@@ -162,7 +187,7 @@ ExtensionConfig.ncm = {
                 return cachedPlayUrl[id].url;
             }
 
-            const resp = await request('/song/url', { id, br: 320000 });
+            const resp = await request('/song/url', { id, br: getBr() });
             const obj = resp.data[0];
             const url = obj.url;
 
@@ -289,9 +314,9 @@ ExtensionConfig.ncm = {
                 }
 
                 alert('成功导入歌单 ' + name + '，共导入 ' + ids.length + ' 首歌曲'
-                     + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '')
-                     + (ids.length == 1000 ? '，本次导入可能达到 API 限制' : '')
-                     + '。', callback);
+                    + (filtered ? '，' + filtered + ' 首因无法播放被过滤' : '')
+                    + (ids.length == 1000 ? '，本次导入可能达到 API 限制' : '')
+                    + '。', callback);
             } catch (err) {
                 alert('导入歌单失败，请稍后重试：' + err);
             }
@@ -377,12 +402,12 @@ ExtensionConfig.ncm = {
             const entry: MusicListEntry = (config.getItem('ext.ncm.musicList') as Array<MusicListEntry>).find(it => it.id == id)!!;
             Object.assign(cachedMetadata, entry.songs);
 
-            renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), { 
+            renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), {
                 uniqueId: 'ncm-list-' + id,
                 errorText: '该歌单为空',
                 menuItems: [DownloadController.getMenuItems()],
                 musicListInfo: { name: entry.name }
-             }, false);
+            }, false);
 
             document.querySelectorAll(".left .leftBar div").forEach(it => {
                 if (it.classList.contains('active')) {
