@@ -3,7 +3,7 @@ import { getCache, initCache, makeCache } from './cache';
 import { formatLyric } from './lyricpp';
 
 declare const defaultConfig: any;
-declare const config: { getItem(key: string): any; setItem(key: string, value: any): void };
+declare const config: { getItem(key: string): any; setItem(key: string, value: any): void; listenChange(key: string, onChange: (value: string) => void): void };
 declare const SettingsPage: { data: Array<any> };
 declare const ExtensionConfig: any;
 declare const DownloadController: { getMenuItems(): any };
@@ -35,6 +35,12 @@ interface MusicListEntry {
     name: string,
     songs: Record<string, Metadata>
 }
+
+// (此文件) 全局变量
+let cachedMetadata: Record<string, Metadata> = {};
+let cachedPlayUrl: Record<string, PlayUrlCache> = {};
+const cachedLyrics: Record<string, string> = {};
+const elements: Record<string, HTMLDivElement> = {};
 
 // 配置
 Object.assign(defaultConfig, {
@@ -82,6 +88,9 @@ SettingsPage.data.push(
     { type: 'boolean', text: '自动格式化歌词', description: '开启后将会自动在网易云歌曲歌词中的无尾随空格英文标点后添加空格，增加 UI 美观度。', configItem: 'ext.ncm.formatLrc' },
     { type: 'input', inputType: 'number', text: '歌单信息最大并行请求数量', description: '必填，默认为 8，推荐不超过 16。', configItem: 'ext.ncm.maxParallelCount' }
 );
+
+// 自动清除 playURL 缓存
+config.listenChange('ext.ncm.musicQuality', () => cachedPlayUrl = {});
 
 // 清除上次无法清除的缓存
 if (localStorage.getItem('ext.ncm.clearCache') == '1') {
@@ -157,11 +166,6 @@ function getBr() {
 
     return 10000000;
 }
-
-let cachedMetadata: Record<string, Metadata> = {};
-const cachedPlayUrl: Record<string, PlayUrlCache> = {};
-const cachedLyrics: Record<string, string> = {};
-const elements: Record<string, HTMLDivElement> = {};
 
 ExtensionConfig.ncm = {
     async readMetadata(path: string) {
