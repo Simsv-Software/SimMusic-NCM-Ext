@@ -103,9 +103,12 @@ async function request(path: string, query: object = {}) {
     const formatted = Object.keys(query).map(k => encodeURI(k) + '=' + encodeURI(query[k])).join('&');
 
     const headers = {};
-    config.getItem('ext.ncm.apiHeaders').split('&').map(it => it.split('=')).forEach(it => {
-        headers[decodeURI(it[0])] = decodeURI(it[1]);
-    });
+    const headersConf: string = config.getItem('ext.ncm.apiHeaders');
+    if (headersConf) {
+        headersConf.split('&').map(it => it.split('=')).forEach(it => {
+            headers[decodeURI(it[0])] = decodeURI(it[1]);
+        });
+    }
 
     const resp = await fetch(config.getItem('ext.ncm.apiEndpoint') + path + '?' + formatted, { headers });
     return await resp.json();
