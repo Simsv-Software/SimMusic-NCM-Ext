@@ -106,7 +106,7 @@ async function request(path: string, query: object = {}) {
     const headersConf: string = config.getItem('ext.ncm.apiHeaders');
     if (headersConf) {
         headersConf.split('&').map(it => it.split('=')).forEach(it => {
-            headers[decodeURI(it[0])] = decodeURI(it[1]);
+            headers[decodeURIComponent(decodeURI(it[0]))] = decodeURIComponent(decodeURI(it[1]));
         });
     }
 
