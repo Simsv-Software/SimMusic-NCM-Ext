@@ -4,17 +4,17 @@ import { formatLyric } from './lyricpp';
 
 declare const defaultConfig: any;
 declare const config: { getItem(key: string): any; setItem(key: string, value: any): void; listenChange(key: string, onChange: (value: string) => void): void };
-declare const SettingsPage: { data: Array<any> };
+declare const SettingsPage: { data: any[] };
 declare const ExtensionConfig: any;
 declare const DownloadController: { getMenuItems(): any };
 declare const ipcRenderer: { invoke(msg: any): void };
 declare function showErrorOverlay(err: Error): void;
 declare function switchRightPage(page: string): void;
-declare function renderMusicList(files: Array<string>, args: { uniqueId: string, dontRenderBeforeLoaded?: boolean, errorText?: string, menuItems: Array<any>, musicListInfo?: any, force?: boolean, finishCallback?: Function }, isFinalRender: boolean): void;
+declare function renderMusicList(files: string[], args: { uniqueId: string, dontRenderBeforeLoaded?: boolean, errorText?: string, menuItems: object[], musicListInfo?: any, force?: boolean, finishCallback?: Function }, isFinalRender: boolean): void;
 declare function alert(msg: string, then?: Function): void;
 declare function confirm(msg: string, then?: Function): void;
 declare function prompt(placeholder: string, then: (str: string) => void): void;
-declare class ContextMenu { constructor(menus: Array<any>); popup(pos: Array<number>): void };
+declare class ContextMenu { constructor(menus: object[]); popup(pos: number[]): void };
 
 interface Metadata {
     title: string,
@@ -22,6 +22,10 @@ interface Metadata {
     album: string,
     cover: string,
     time: number,
+}
+
+interface SavedMetadata extends Metadata {
+    id: string
 }
 
 interface PlayUrlCache {
@@ -33,7 +37,7 @@ interface PlayUrlCache {
 interface MusicListEntry {
     id: string,
     name: string,
-    songs: Record<string, Metadata>
+    songs: SavedMetadata[]
 }
 
 // (此文件) 全局变量
@@ -274,7 +278,7 @@ ExtensionConfig.ncm = {
 
     musicList: {
         async _import(callback: Function, id: string, isUpdate: boolean = false) {
-            let list: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
+            let list: MusicListEntry[] = config.getItem('ext.ncm.musicList');
             if (!isUpdate) {
                 for (let entry of list) {
                     if (entry.id == id) {
@@ -306,11 +310,19 @@ ExtensionConfig.ncm = {
                     throw '获取歌曲元数据时发生错误。';
                 }
 
+                const songArr: SavedMetadata[] = [];
+                ids.forEach((it: any) => {
+                    songArr[it] = {
+                        ...metadata[it],
+                        id: it
+                    };
+                })
+
                 if (isUpdate) {
                     list = list.filter(it => it.id != id);
                 }
 
-                const newEntry: MusicListEntry = { id, name, songs: metadata };
+                const newEntry: MusicListEntry = { id, name, songs: songArr };
                 list.push(newEntry);
 
                 config.setItem('ext.ncm.musicList', list);
@@ -365,8 +377,15 @@ ExtensionConfig.ncm = {
         },
 
         renderList(container: HTMLElement) {
-            const list: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
+            const list: MusicListEntry[] = config.getItem('ext.ncm.musicList');
+            const errList: MusicListEntry[] = [];
+
             list.forEach(entry => {
+                if (!((entry as any) instanceof Array)) {
+                    errList.push(entry);
+                    return;
+                }
+
                 const element = document.createElement('div');
                 element.textContent = entry.name;
 
@@ -384,7 +403,7 @@ ExtensionConfig.ncm = {
                         {
                             label: '从列表中移除', click() {
                                 confirm(`确认移除网易云歌单 ${entry.name} 吗？`, () => {
-                                    const currentList: Array<MusicListEntry> = config.getItem('ext.ncm.musicList');
+                                    const currentList: MusicListEntry[] = config.getItem('ext.ncm.musicList');
                                     config.setItem('ext.ncm.musicList', currentList.filter(it => it.id != entry.id));
 
                                     if (element.classList.contains('active')) {
@@ -402,13 +421,22 @@ ExtensionConfig.ncm = {
                 elements[entry.id] = element;
                 container.appendChild(element);
             });
+
+            if (errList.length) {
+                alert('以下歌单因技术升级已被移除，对您造成的不便敬请谅解: ' + errList.map(it => it.name).join('，'),
+                    () => {
+                        const oldList: MusicListEntry[] = config.getItem('ext.ncm.musicList');
+                        const removedIds: string[] = errList.map(it => it.id);
+                        config.setItem('ext.ncm.musicList', oldList.filter(it => !removedIds.includes(it.id)));
+                    });
+            }
         },
 
         switchList(id: string) {
-            const entry: MusicListEntry = (config.getItem('ext.ncm.musicList') as Array<MusicListEntry>).find(it => it.id == id)!!;
+            const entry: MusicListEntry = (config.getItem('ext.ncm.musicList') as MusicListEntry[]).find(it => it.id == id)!!;
             Object.assign(cachedMetadata, entry.songs);
 
-            renderMusicList(Object.keys(entry.songs).map(it => 'ncm:' + it), {
+            renderMusicList(entry.songs.map(it => 'ncm:' + it.id), {
                 uniqueId: 'ncm-list-' + id,
                 errorText: '该歌单为空',
                 menuItems: [DownloadController.getMenuItems()],
